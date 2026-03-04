@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>В/Ч А7020 — Пошук особового складу</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d0f14; --surface:#13161e; --surface2:#1a1e29;
+    --border:#252a38; --border2:#2e3447;
+    --accent:#3b82f6; --accent2:#1d4ed8;
+    --green:#22c55e; --yellow:#eab308; --red:#ef4444;
+    --purple:#a855f7; --cyan:#06b6d4; --orange:#f97316;
+    --text:#e2e8f0; --text2:#94a3b8; --text3:#475569;
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:40px 40px;opacity:.22;pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;max-width:1340px;margin:0 auto;padding:28px 24px 80px;}
+
+  /* HEADER */
+  .header{display:flex;align-items:center;gap:14px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+  .header-icon{width:42px;height:42px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .header-title{font-family:var(--mono);font-size:16px;font-weight:600;}
+  .header-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+  .badge{margin-left:auto;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;color:var(--text2);}
+
+  /* SEARCH */
+  .sec-label{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .mode-tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .mode-tab{padding:5px 14px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .18s;text-transform:uppercase;letter-spacing:.5px;}
+  .mode-tab:hover{border-color:var(--accent);color:var(--text2);}
+  .mode-tab.active{background:rgba(59,130,246,.15);border-color:var(--accent);color:var(--accent);}
+  .search-row{display:flex;gap:10px;margin-bottom:24px;}
+  .siw{flex:1;position:relative;}
+  .siw .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none;}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 14px 12px 38px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  .search-input::placeholder{color:var(--text3);}
+  .search-btn{background:var(--accent);border:none;border-radius:10px;padding:0 20px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,transform .1s;white-space:nowrap;}
+  .search-btn:hover{background:var(--accent2);}
+  .search-btn:active{transform:scale(.97);}
+
+  /* RESULTS TABLE */
+  .results-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .cnt{background:var(--accent);color:#fff;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:600;font-family:var(--mono);}
+  .tbl-wrap{overflow-x:auto;margin-bottom:24px;border-radius:12px;border:1px solid var(--border);}
+  .rtable{width:100%;border-collapse:collapse;background:var(--surface);min-width:950px;}
+  .rtable thead tr{background:var(--surface2);border-bottom:1px solid var(--border2);}
+  .rtable th{padding:10px 14px;text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;}
+  .rtable td{padding:11px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;cursor:pointer;transition:background .12s;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
+  .rtable tbody tr:last-child td{border-bottom:none;}
+  .rtable tbody tr:hover td{background:rgba(59,130,246,.06);}
+  .rtable tbody tr.sel td{background:rgba(59,130,246,.12);}
+  .rtable tbody tr.sel td:first-child{border-left:3px solid var(--accent);padding-left:11px;}
+  .c-pib{font-weight:600;font-size:13px;} .c-phone{font-family:var(--mono);color:var(--cyan);font-size:11px;}
+  .c-zv{color:var(--yellow);font-size:11px;} .c-dob{font-family:var(--mono);color:var(--text2);font-size:11px;}
+  .c-roz{color:var(--orange);font-size:11px;} .c-pid{color:var(--text2);font-size:11px;}
+  .c-prb{font-family:var(--mono);color:var(--green);font-size:11px;}
+  .hl{background:rgba(59,130,246,.3);border-radius:2px;padding:0 1px;}
+
+  /* DETAIL */
+  .detail{background:var(--surface);border:1px solid var(--border2);border-radius:14px;overflow:hidden;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none;margin-bottom:24px;}
+  .detail.on{opacity:1;transform:translateY(0);pointer-events:all;}
+  .det-head{background:var(--surface2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .det-name{font-size:15px;font-weight:600;flex:1;min-width:180px;}
+  .det-rank{font-family:var(--mono);font-size:11px;color:var(--yellow);background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);border-radius:6px;padding:3px 10px;}
+  .det-close{background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text3);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:border-color .2s,color .2s;margin-left:auto;}
+  .det-close:hover{border-color:var(--text2);color:var(--text);}
+  .det-grid{padding:18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 20px;}
+  .df{display:flex;flex-direction:column;gap:4px;}
+  .df label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+  .df .v{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--text);}
+  .v.mono{font-family:var(--mono);font-size:12px;} .v.cy{color:var(--cyan);} .v.ye{color:var(--yellow);} .v.gr{color:var(--green);}
+
+  /* DOC BUTTONS */
+  .doc-sec{border-top:1px solid var(--border);padding:16px 20px;}
+  .doc-label{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+  .doc-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .dbtn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;transition:all .18s;position:relative;overflow:hidden;}
+  .dbtn::after{content:'';position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .15s;}
+  .dbtn:hover::after{opacity:.08;} .dbtn:active{transform:scale(.96);}
+  .b-an{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green);}
+  .b-vl{background:rgba(234,179,8,.12);border-color:rgba(234,179,8,.3);color:var(--yellow);}
+  .b-st{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--red);}
+  .b-ha{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple);}
+  .b-ra{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:var(--cyan);}
+
+  /* REGISTRY */
+  .reg-sec{margin-top:32px;}
+  .reg-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .reg-title{font-family:var(--mono);font-size:13px;font-weight:600;}
+  .reg-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+  .rtab{padding:4px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-family:var(--mono);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px;}
+  .rtab:hover{border-color:var(--text3);color:var(--text2);}
+  .rtab.on-an{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.4);}
+  .rtab.on-vl{background:rgba(234,179,8,.1);color:var(--yellow);border-color:rgba(234,179,8,.4);}
+  .rtab.on-st{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.4);}
+  .rtab.on-ha{background:rgba(168,85,247,.1);color:var(--purple);border-color:rgba(168,85,247,.4);}
+  .rtab.on-ra{background:rgba(6,182,212,.1);color:var(--cyan);border-color:rgba(6,182,212,.4);}
+  .reg-tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+  .regtable{width:100%;border-collapse:collapse;background:var(--surface);min-width:800px;}
+  .regtable thead tr{background:var(--surface2);border-bottom:1px solid var(--border2);}
+  .regtable th{padding:9px 14px;text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;}
+  .regtable td{padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+  .regtable tbody tr:last-child td{border-bottom:none;}
+  .regtable tbody tr.nr td{animation:rowIn .5s ease;}
+  @keyframes rowIn{from{background:rgba(59,130,246,.18);}to{background:transparent;}}
+  .reg-empty{text-align:center;padding:28px;color:var(--text3);font-family:var(--mono);font-size:12px;}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:12px;border:1px dashed var(--border2);border-radius:12px;margin-bottom:24px;}
+  .empty .big{font-size:28px;margin-bottom:8px;}
+
+  /* TOAST */
+  .toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:100;}
+  .toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;font-family:var(--mono);display:flex;align-items:flex-start;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:tIn .3s ease;max-width:360px;}
+  @keyframes tIn{from{opacity:0;transform:translateX(14px);}to{opacity:1;transform:translateX(0);}}
+  .t-ico{font-size:15px;flex-shrink:0;margin-top:1px;}
+  .t-title{font-size:12px;color:var(--text);font-weight:600;display:block;margin-bottom:2px;}
+  .t-path{font-size:10px;color:var(--text3);display:block;}
+
+  .doc-btns-disabled .dbtn { opacity:.35; cursor:not-allowed; pointer-events:none; }
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .modal-overlay.on{opacity:1;pointer-events:all;}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:calc(100vw - 32px);overflow:hidden;transform:translateY(12px) scale(.97);transition:transform .2s;}
+  .modal-overlay.on .modal{transform:translateY(0) scale(1);}
+  .modal-head{background:var(--surface2);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:10px;}
+  .modal-icon{font-size:18px;}
+  .modal-title{font-family:var(--mono);font-size:14px;font-weight:600;flex:1;}
+  .modal-type{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:5px;border:1px solid transparent;}
+  .mt-аналізи{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green);}
+  .mt-влк{background:rgba(234,179,8,.12);border-color:rgba(234,179,8,.3);color:var(--yellow);}
+  .mt-стаціонар{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--red);}
+  .mt-характеристика{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:var(--purple);}
+  .mt-рапорт{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:var(--cyan);}
+  .modal-close{background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text3);width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:border-color .2s,color .2s;}
+  .modal-close:hover{border-color:var(--text2);color:var(--text);}
+  .modal-body{padding:20px;}
+  .modal-patient{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);display:flex;gap:16px;flex-wrap:wrap;}
+  .modal-patient span{display:flex;flex-direction:column;gap:2px;}
+  .modal-patient .ml{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;}
+  .modal-patient .mv{font-size:12px;color:var(--text);}
+  .modal-field label{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:7px;}
+  .modal-textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:13px;resize:vertical;min-height:90px;outline:none;transition:border-color .2s,box-shadow .2s;line-height:1.5;}
+  .modal-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  .modal-textarea::placeholder{color:var(--text3);}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+  .modal-cancel{background:none;border:1px solid var(--border2);border-radius:8px;padding:8px 18px;color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s;}
+  .modal-cancel:hover{border-color:var(--text2);color:var(--text);}
+  .modal-confirm{border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+  .mc-аналізи{background:var(--green);} .mc-аналізи:hover{background:#16a34a;}
+  .mc-влк{background:var(--yellow);color:#000;} .mc-влк:hover{background:#ca8a04;}
+  .mc-стаціонар{background:var(--red);} .mc-стаціонар:hover{background:#b91c1c;}
+  .mc-характеристика{background:var(--purple);} .mc-характеристика:hover{background:#9333ea;}
+  .mc-рапорт{background:var(--cyan);color:#000;} .mc-рапорт:hover{background:#0891b2;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-icon">🪖</div>
+    <div>
+      <div class="header-title">В/Ч А7020 · СЗЧ</div>
+      <div class="header-sub">пошук особового складу · генерація документів · реєстр напрямків</div>
+    </div>
+    <div class="badge" id="dbCount">— записів</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="sec-label">Пошук особового складу</div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabPib"   onclick="setMode('pib')">👤 П.І.Б.</button>
+    <button class="mode-tab"        id="tabPhone" onclick="setMode('phone')">📞 Номер телефону</button>
+  </div>
+  <div class="search-row">
+    <div class="siw">
+      <span class="ico" id="siIcon">👤</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Введіть прізвище або ім'я..." autocomplete="off">
+    </div>
+    <button class="search-btn" onclick="doSearch()">Знайти</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resSection" style="display:none">
+    <div class="results-hdr">
+      <div class="sec-label" style="margin:0">Результати</div>
+      <span class="cnt" id="resCnt">0</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="rtable">
+        <thead><tr>
+          <th>П.І.Б.</th>
+          <th>Номер телефону</th>
+          <th>Військове звання</th>
+          <th>Дата народження</th>
+          <th>Розміщення о/с</th>
+          <th>Підрозділ</th>
+          <th>Прибув у в/ч</th>
+        </tr></thead>
+        <tbody id="resBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="emptyState"   class="empty" style="display:none"><div class="big">🔍</div>Нічого не знайдено.</div>
+  <div id="initState"    class="empty"><div class="big">🪖</div>Введіть П.І.Б. або номер телефону.</div>
+
+  <!-- DETAIL -->
+  <div class="detail" id="detPanel">
+    <div class="det-head">
+      <div class="det-name"  id="dName">—</div>
+      <div class="det-rank"  id="dRank">—</div>
+      <button class="det-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="det-grid">
+      <div class="df"><label>П.І.Б.</label><div class="v" id="dPib">—</div></div>
+      <div class="df"><label>Номер телефону</label><div class="v mono cy" id="dPhone">—</div></div>
+      <div class="df"><label>Військове звання</label><div class="v ye" id="dZv">—</div></div>
+      <div class="df"><label>Дата народження</label><div class="v mono" id="dDob">—</div></div>
+      <div class="df"><label>Дата зарахування у В/Ч А7020</label><div class="v mono gr" id="dVch">—</div></div>
+      <div class="df"><label>Розміщення о/с</label><div class="v" id="dRoz">—</div></div>
+    </div>
+    <div class="doc-sec">
+      <div class="doc-label">Створити документ → записати в реєстр</div>
+      <div class="doc-btns doc-btns-disabled" id="docBtns">
+        <button class="dbtn b-an" onclick="createDoc('аналізи')">🧪 Аналізи</button>
+        <button class="dbtn b-vl" onclick="createDoc('влк')">🎖 ВЛК</button>
+        <button class="dbtn b-st" onclick="createDoc('стаціонар')">🏥 Стаціонар</button>
+        <button class="dbtn b-ha" onclick="createDoc('характеристика')">📋 Характеристика</button>
+        <button class="dbtn b-ra" onclick="createDoc('рапорт')">📝 Рапорт</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTRY -->
+  <div class="reg-sec" id="regSec" style="display:none">
+    <div class="reg-hdr">
+      <div class="reg-title">📂 Реєстр напрямків</div>
+      <div class="reg-tabs">
+        <button class="rtab" id="rt-an" onclick="switchTab('аналізи')">🧪 Аналізи</button>
+        <button class="rtab" id="rt-vl" onclick="switchTab('влк')">🎖 ВЛК</button>
+        <button class="rtab" id="rt-st" onclick="switchTab('стаціонар')">🏥 Стаціонар</button>
+        <button class="rtab" id="rt-ha" onclick="switchTab('характеристика')">📋 Характеристика</button>
+        <button class="rtab" id="rt-ra" onclick="switchTab('рапорт')">📝 Рапорт</button>
+      </div>
+    </div>
+    <div class="reg-tbl-wrap">
+      <table class="regtable">
+        <thead><tr>
+          <th>№</th>
+          <th>П.І.Б.</th>
+          <th>Телефон</th>
+          <th>Звання</th>
+          <th>Дата народження</th>
+          <th>Дата зарахування</th>
+          <th>Розміщення о/с</th>
+          <th>Діагноз</th>
+          <th>Дата запису</th>
+          <th>Файл</th>
+        </tr></thead>
+        <tbody id="regBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+<!-- MODAL: діагноз -->
+<div class="modal-overlay" id="modalOverlay" onclick="modalBgClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-icon" id="mIcon">📄</span>
+      <span class="modal-title">Направлення</span>
+      <span class="modal-type" id="mTypeBadge"></span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-patient">
+        <span><span class="ml">П.І.Б.</span><span class="mv" id="mPib">—</span></span>
+        <span><span class="ml">Звання</span><span class="mv" id="mZv">—</span></span>
+        <span><span class="ml">Телефон</span><span class="mv" id="mPhone">—</span></span>
+      </div>
+      <div class="modal-field">
+        <label>Діагноз для направлення</label>
+        <textarea class="modal-textarea" id="mDiag" placeholder="Введіть діагноз...&#10;Наприклад: J06.9 Гострий назофарингіт"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-cancel" onclick="closeModal()">Скасувати</button>
+      <button class="modal-confirm" id="mConfirm" onclick="confirmDoc()">Створити документ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── DEMO DATA — замінити на реальне зчитування через pandas ──────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// КОНФІГ
+// ══════════════════════════════════════════════════════════════════════════
+const API = '';  // порожньо = той самий хост. Або 'http://192.168.1.100:8000'
+
+// Basic Auth — встановлюється при першому запиті або через форму логіну
+let AUTH_HEADER = '';
+
+function setAuth(user, pass) {
+  AUTH_HEADER = 'Basic ' + btoa(user + ':' + pass);
+}
+
+// За замовчуванням беремо з localStorage (якщо вже вводили)
+if (localStorage.getItem('auth')) AUTH_HEADER = localStorage.getItem('auth');
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...opts.headers };
+  if (AUTH_HEADER) headers['Authorization'] = AUTH_HEADER;
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401) { showLoginModal(); throw new Error('Unauthorized'); }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+let mode = 'pib', selRow = null, selRec = null, activeTab = null;
+let searchTimer = null;                     // debounce для живого пошуку
+const COLS = { 'аналізи':[], 'влк':[], 'стаціонар':[], 'характеристика':[], 'рапорт':[] };
+const CNTS = { 'аналізи':0,  'влк':0,  'стаціонар':0,  'характеристика':0,  'рапорт':0  };
+const TAB_CLASS = { 'аналізи':'on-an','влк':'on-vl','стаціонар':'on-st','характеристика':'on-ha','рапорт':'on-ra' };
+const TAB_ID    = { 'аналізи':'rt-an','влк':'rt-vl','стаціонар':'rt-st','характеристика':'rt-ha','рапорт':'rt-ra' };
+const DOC_ICONS = { 'аналізи':'🧪','влк':'🎖','стаціонар':'🏥','характеристика':'📋','рапорт':'📝' };
+
+// ══════════════════════════════════════════════════════════════════════════
+// LOGIN MODAL (з'являється при 401)
+// ══════════════════════════════════════════════════════════════════════════
+function showLoginModal() {
+  // Простий prompt — можна замінити на красивий modal
+  const user = prompt('Логін:');
+  const pass = prompt('Пароль:');
+  if (user && pass) {
+    AUTH_HEADER = 'Basic ' + btoa(user + ':' + pass);
+    localStorage.setItem('auth', AUTH_HEADER);
+    doSearch();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// HEALTH CHECK — перевіряємо з'єднання з бекендом при завантаженні
+// ══════════════════════════════════════════════════════════════════════════
+async function checkHealth() {
+  try {
+    const res = await fetch(API + '/api/health');
+    const data = await res.json();
+    document.getElementById('dbCount').textContent =
+      (data.personnel_count ?? '?') + ' записів';
+  } catch {
+    document.getElementById('dbCount').textContent = '⚠ бекенд недоступний';
+    document.getElementById('dbCount').style.color = 'var(--red)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SEARCH MODE
+// ══════════════════════════════════════════════════════════════════════════
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabPib').classList.toggle('active', m==='pib');
+  document.getElementById('tabPhone').classList.toggle('active', m==='phone');
+  const inp = document.getElementById('searchInput');
+  const ico = document.getElementById('siIcon');
+  if (m==='pib') { inp.placeholder="Введіть прізвище або ім'я..."; ico.textContent='👤'; inp.type='text'; }
+  else           { inp.placeholder="Введіть номер телефону..."; ico.textContent='📞'; inp.type='tel'; }
+  inp.value=''; inp.focus();
+  document.getElementById('resSection').style.display='none';
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('initState').style.display='block';
+  closeDetail();
+}
+
+document.getElementById('searchInput').addEventListener('input', () => {
+  // Debounce 300мс — не слати запит на кожну літеру
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 300);
+});
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(searchTimer); doSearch(); }
+});
+
+function hl(text, q) {
+  if (!q || !text) return String(text || '—');
+  return String(text).replace(
+    new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'),
+    '<span class="hl">$1</span>'
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SEARCH  →  GET /api/search?mode=pib|phone&q=...
+// ══════════════════════════════════════════════════════════════════════════
+async function doSearch() {
+  const raw = document.getElementById('searchInput').value.trim();
+  const q = raw.toLowerCase();
+  closeDetail();
+
+  if (q === '') {
+    document.getElementById('resSection').style.display='none';
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('initState').style.display='block';
+    return;
+  }
+
+  document.getElementById('initState').style.display='none';
+
+  let results;
+  try {
+    const res = await apiFetch(`/api/search?mode=${mode}&q=${encodeURIComponent(raw)}`);
+    results = await res.json();
+  } catch (err) {
+    if (err.message === 'Unauthorized') return;
+    showErrorToast('Помилка пошуку', err.message);
+    return;
+  }
+
+  if (!results.length) {
+    document.getElementById('resSection').style.display='none';
+    document.getElementById('emptyState').style.display='block';
+    return;
+  }
+
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resSection').style.display='block';
+  document.getElementById('resCnt').textContent = results.length;
+
+  // Маппінг полів API → поля UI
+  // API повертає: id, pib, phone, rank, birth_date, location, subdivision, arrival_date, enroll_date
+  const body = document.getElementById('resBody');
+  body.innerHTML = '';
+  results.forEach(r => {
+    const rec = mapRecord(r);
+    const tr = document.createElement('tr');
+    const hlPib   = mode==='pib'   ? hl(rec.pib,   q) : (rec.pib   || '—');
+    const hlPhone = mode==='phone' ? hl(rec.phone,  raw) : (rec.phone || '—');
+    tr.innerHTML = `
+      <td class="c-pib"  title="${rec.pib}">${hlPib}</td>
+      <td class="c-phone"title="${rec.phone}">${hlPhone}</td>
+      <td class="c-zv"   title="${rec.zvanna}">${rec.zvanna || '—'}</td>
+      <td class="c-dob"  title="${rec.dob}">${rec.dob || '—'}</td>
+      <td class="c-roz"  title="${rec.rozmish}">${rec.rozmish || '—'}</td>
+      <td class="c-pid"  title="${rec.pidrozdil}">${rec.pidrozdil || '—'}</td>
+      <td class="c-prb"  title="${rec.prybув}">${rec.prybув || '—'}</td>`;
+    tr.addEventListener('click', () => selectRow(tr, rec));
+    body.appendChild(tr);
+  });
+}
+
+// Маппінг полів API → внутрішні назви UI
+// Якщо бекенд поверне інші назви — змінити тільки тут
+function mapRecord(r) {
+  return {
+    id:        r.id,
+    pib:       r.pib        ?? r['П.І.Б.']                        ?? '',
+    phone:     r.phone      ?? r['Номер телефону']                 ?? '',
+    zvanna:    r.rank       ?? r['військове звання']               ?? '',
+    dob:       r.birth_date ?? r['Дата народження']                ?? '',
+    date_vch:  r.enroll_date?? r['Дата зарахування у В/Ч А7020']  ?? '',
+    rozmish:   r.location   ?? r['Розміщення о/с']                 ?? '',
+    pidrozdil: r.subdivision?? r['підрозділ']                      ?? '',
+    prybув:    r.arrival_date??r['Прибув у в/ч']                   ?? '',
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SELECT ROW
+// ══════════════════════════════════════════════════════════════════════════
+function selectRow(tr, rec) {
+  if (selRow) selRow.classList.remove('sel');
+  tr.classList.add('sel'); selRow = tr; selRec = rec;
+  document.getElementById('docBtns').classList.remove('doc-btns-disabled');
+  document.getElementById('dName').textContent  = rec.pib;
+  document.getElementById('dRank').textContent  = rec.zvanna || '—';
+  document.getElementById('dPib').textContent   = rec.pib;
+  document.getElementById('dPhone').textContent = rec.phone;
+  document.getElementById('dZv').textContent    = rec.zvanna || '—';
+  document.getElementById('dDob').textContent   = rec.dob || '—';
+  document.getElementById('dVch').textContent   = rec.date_vch || '—';
+  document.getElementById('dRoz').textContent   = rec.rozmish || '—';
+  const p = document.getElementById('detPanel');
+  p.classList.add('on');
+  setTimeout(() => p.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+
+function closeDetail() {
+  document.getElementById('detPanel').classList.remove('on');
+  if (selRow) selRow.classList.remove('sel');
+  selRow = null; selRec = null;
+  document.getElementById('docBtns').classList.add('doc-btns-disabled');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// MODAL — відкриття
+// ══════════════════════════════════════════════════════════════════════════
+let pendingType = null;
+
+function createDoc(type) {
+  if (!selRec) return;
+  pendingType = type;
+  const r = selRec;
+
+  document.getElementById('mIcon').textContent      = DOC_ICONS[type];
+  document.getElementById('mTypeBadge').textContent = type.toUpperCase();
+  document.getElementById('mTypeBadge').className   = 'modal-type mt-' + type;
+  document.getElementById('mConfirm').className     = 'modal-confirm mc-' + type;
+  document.getElementById('mPib').textContent       = r.pib;
+  document.getElementById('mZv').textContent        = r.zvanna || '—';
+  document.getElementById('mPhone').textContent     = r.phone;
+  document.getElementById('mDiag').value            = '';
+
+  document.getElementById('modalOverlay').classList.add('on');
+  setTimeout(() => document.getElementById('mDiag').focus(), 200);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('on');
+  pendingType = null;
+}
+
+function modalBgClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('mDiag').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') confirmDoc();
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// CONFIRM DOC  →  POST /api/documents
+// ══════════════════════════════════════════════════════════════════════════
+async function confirmDoc() {
+  const diag = document.getElementById('mDiag').value.trim();
+  if (!diag) {
+    document.getElementById('mDiag').style.borderColor = 'var(--red)';
+    document.getElementById('mDiag').focus();
+    setTimeout(() => document.getElementById('mDiag').style.borderColor = '', 1500);
+    return;
+  }
+
+  // Блокуємо кнопку на час запиту
+  const btn = document.getElementById('mConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Створюємо...';
+
+  const type = pendingType;
+  const r = selRec;
+
+  try {
+    const res = await apiFetch('/api/documents', {
+      method: 'POST',
+      body: JSON.stringify({
+        personnel_id: r.id,
+        doc_type:     type,
+        diagnosis:    diag,
+      }),
+    });
+    const doc = await res.json();
+
+    // Файл — відкрити в новій вкладці або скачати
+    const fileUrl = `${API}/api/files/${doc.id}`;
+    const filePath = doc.file_path ?? fileUrl;
+
+    CNTS[type]++;
+    const entry = {
+      num: CNTS[type], pib: r.pib, phone: r.phone, zvanna: r.zvanna,
+      dob: r.dob, date_vch: r.date_vch, rozmish: r.rozmish,
+      diag, created: doc.created_at ?? new Date().toISOString().slice(0,10),
+      file: filePath, doc_id: doc.id, isNew: true,
+    };
+    COLS[type].unshift(entry);
+
+    closeModal();
+    document.getElementById('regSec').style.display = 'block';
+    switchTab(type);
+    showToast(DOC_ICONS[type], `${type.toUpperCase()} створено → реєстр`, filePath, fileUrl);
+    setTimeout(() => { entry.isNew = false; }, 600);
+
+  } catch (err) {
+    if (err.message !== 'Unauthorized') showErrorToast('Помилка створення', err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Створити документ';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// REGISTRY TABS  →  GET /api/registry?doc_type=...
+// ══════════════════════════════════════════════════════════════════════════
+function switchTab(type) {
+  activeTab = type;
+  document.querySelectorAll('.rtab').forEach(t => {
+    Object.values(TAB_CLASS).forEach(c => t.classList.remove(c));
+  });
+  document.getElementById(TAB_ID[type]).classList.add(TAB_CLASS[type]);
+  loadRegistry(type);
+}
+
+async function loadRegistry(type) {
+  const body = document.getElementById('regBody');
+
+  // Спочатку показуємо локальні (вже додані в цій сесії)
+  renderReg(type);
+
+  // Потім підвантажуємо з сервера
+  try {
+    const res = await apiFetch(`/api/registry?doc_type=${encodeURIComponent(type)}`);
+    const serverRows = await res.json();
+
+    // Мержимо: server + локальні нові (яких ще нема на сервері)
+    const serverIds = new Set(serverRows.map(r => r.id));
+    const localNew  = COLS[type].filter(e => !serverIds.has(e.doc_id));
+
+    const merged = [...localNew, ...serverRows.map(r => ({
+      num:      r.row_num ?? r.id,
+      pib:      r.pib,
+      phone:    r.phone,
+      zvanna:   r.rank      ?? r.zvanna ?? '—',
+      dob:      r.birth_date ?? r.dob   ?? '—',
+      date_vch: r.enroll_date?? r.date_vch?? '—',
+      rozmish:  r.location  ?? r.rozmish ?? '—',
+      diag:     r.diagnosis ?? r.diag   ?? '—',
+      created:  r.created_at ?? r.created ?? '—',
+      file:     r.file_path ?? r.file   ?? '—',
+      doc_id:   r.id,
+      isNew:    false,
+    }))];
+
+    COLS[type] = merged;
+    renderReg(type);
+  } catch {
+    // Якщо сервер недоступний — показуємо тільки локальні
+  }
+}
+
+function renderReg(type) {
+  const rows = COLS[type];
+  const body = document.getElementById('regBody');
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="10" class="reg-empty">Записів немає</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map((e, i) => `
+    <tr class="${e.isNew ? 'nr' : ''}">
+      <td style="font-family:var(--mono);color:var(--text3);font-size:11px">${i + 1}</td>
+      <td style="font-weight:600;font-size:13px">${e.pib || '—'}</td>
+      <td style="font-family:var(--mono);color:var(--cyan);font-size:11px">${e.phone || '—'}</td>
+      <td style="color:var(--yellow);font-size:11px">${e.zvanna || '—'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${e.dob || '—'}</td>
+      <td style="font-family:var(--mono);color:var(--green);font-size:11px">${e.date_vch || '—'}</td>
+      <td style="color:var(--orange);font-size:11px">${e.rozmish || '—'}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${e.diag || ''}">${e.diag || '—'}</td>
+      <td style="font-family:var(--mono);color:var(--text3);font-size:11px">${e.created || '—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--accent)">
+        ${e.doc_id
+          ? `<a href="${API}/api/files/${e.doc_id}" target="_blank" style="color:var(--accent);text-decoration:none" title="Відкрити PDF">↗ PDF</a>`
+          : (e.file || '—')}
+      </td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════════════
+function showToast(icon, title, path, url) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  const pathHtml = url
+    ? `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none">${path} ↗</a>`
+    : path;
+  el.innerHTML = `<span class="t-ico">${icon}</span><div><strong class="t-title">${title}</strong><span class="t-path">${pathHtml}</span></div>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s'; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  }, 5000);
+}
+
+function showErrorToast(title, msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderColor = 'var(--red)';
+  el.innerHTML = `<span class="t-ico">⚠</span><div><strong class="t-title" style="color:var(--red)">${title}</strong><span class="t-path">${msg}</span></div>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s'; el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  }, 6000);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
+checkHealth();
+</script>
+</body>
+</html>
