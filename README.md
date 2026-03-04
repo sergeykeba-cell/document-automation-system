@@ -1,80 +1,32 @@
 # Document Automation System
 
-A web-based document management system with automated PDF generation,
-personnel search, and registry management.
+A web-based tool that automates document generation and personnel management for organizations.
 
 ## Features
-
-- 🔍 Real-time personnel search by name or phone number
-- 📄 Automated PDF generation (5 document types)
-- 📊 Import personnel data from Excel (29,000+ records)
-- 🗂️ Document registry with export to .xlsx
-- 🔐 Role-based access control (admin / operator)
-- 📝 Audit log of all actions
+- 📂 **Import large Excel files** – handles datasets with 29,000+ records.
+- 🔍 **Real‑time search** – instantly find employees by name, department, or position.
+- 📄 **PDF generation** – create multiple types of documents using ReportLab.
+- 📋 **Document registry** – keep track of generated documents, export to Excel.
+- 🔐 **Role‑based access** – admins and regular users have different permissions.
+- 📜 **Audit log** – monitor user actions for security.
 
 ## Tech Stack
+- **Backend:** Python, FastAPI, SQLite
+- **Data processing:** pandas, openpyxl
+- **PDF generation:** ReportLab
+- **Frontend:** HTML, CSS, JavaScript (vanilla)
 
-- **Backend:** Python 3.11, FastAPI, SQLite
-- **Data:** pandas, openpyxl
-- **PDF:** ReportLab
-- **Frontend:** HTML, CSS, Vanilla JS
-- **Auth:** HTTP Basic Auth + bcrypt
+## Installation
+1. Clone the repository:  
+   `git clone https://github.com/sergeykeba-cell/document-automation-system.git`
+2. Create a virtual environment and install dependencies:  
+   `pip install -r requirements.txt`
+3. Run the application:  
+   `uvicorn main:app --reload`
+4. Open `http://localhost:8000` in your browser.
 
-## Quick Start
+## Screenshots
+*(Add screenshots here – they greatly improve readability!)*
 
-### Requirements
-- Python 3.11+
-
-### Windows
-\```
-start.bat
-\```
-
-### Linux / Mac
-\```bash
-chmod +x start.sh && ./start.sh
-\```
-
-Open browser: **http://localhost:8000**
-
-Default credentials:
-- `admin` / `admin123` — import, export, audit
-- `operator` / `op123` — search and document creation
-
-> ⚠️ Change passwords after first login
-
-## API Endpoints
-
-| Method | URL | Access | Description |
-|--------|-----|--------|-------------|
-| GET | `/api/health` | all | Status + record count |
-| GET | `/api/search?mode=pib\|phone&q=` | all | Search personnel |
-| POST | `/api/documents` | all | Create document + PDF |
-| GET | `/api/registry?doc_type=` | all | Document registry |
-| GET | `/api/files/{doc_id}` | all | Download PDF |
-| POST | `/api/import` | admin | Import .xlsx |
-| GET | `/api/export?doc_type=` | admin | Export registry |
-| GET | `/api/audit` | admin | Action log |
-
-## Project Structure
-
-\```
-├── app/
-│   ├── main.py            # FastAPI — all endpoints
-│   ├── database.py        # SQLite + schema
-│   ├── security.py        # Auth + roles
-│   ├── import_service.py  # Excel import
-│   ├── pdf_gen.py         # PDF generation
-│   ├── export_service.py  # Registry export
-│   └── static/
-│       └── index.html     # Frontend UI
-├── pdfs/                  # Generated PDFs
-├── requirements.txt
-├── start.bat
-└── start.sh
-\```
-
-## Built With
-
-Developed using [Claude AI](https://claude.ai) as a development tool —
-requirements analysis, architecture design, code generation and debugging.
+## License
+MIT
