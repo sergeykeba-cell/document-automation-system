@@ -1,10 +1,11 @@
 """
 security.py — Basic Auth + bcrypt + ролі
 """
-import secrets
+
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
 from app.database import get_conn
 
 security = HTTPBasic()

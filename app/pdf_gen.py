@@ -1,13 +1,15 @@
 """
 pdf_gen.py — генерація PDF через reportlab з підтримкою кирилиці
 """
-from pathlib import Path
+
 from datetime import datetime
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from pathlib import Path
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 
 # ── Шрифт з кирилицею ────────────────────────────────────────────────────────
 # Порядок пошуку: поруч зі скриптом → системні шляхи
@@ -39,11 +41,11 @@ def _ensure_font():
 
 # ── Назви документів ──────────────────────────────────────────────────────────
 DOC_TITLES = {
-    "аналізи":        "НАПРАВЛЕННЯ НА АНАЛІЗИ",
-    "влк":            "НАПРАВЛЕННЯ НА ВЛК",
-    "стаціонар":      "НАПРАВЛЕННЯ НА СТАЦІОНАР",
+    "аналізи": "НАПРАВЛЕННЯ НА АНАЛІЗИ",
+    "влк": "НАПРАВЛЕННЯ НА ВЛК",
+    "стаціонар": "НАПРАВЛЕННЯ НА СТАЦІОНАР",
     "характеристика": "МЕДИЧНА ХАРАКТЕРИСТИКА",
-    "рапорт":         "РАПОРТ",
+    "рапорт": "РАПОРТ",
 }
 
 
@@ -82,41 +84,41 @@ def generate_pdf(record: dict, diagnosis: str, doc_type: str, file_path: Path):
 
     # ── Шапка ────────────────────────────────────────────────────────────────
     c.setFont(_FONT_NAME, 11)
-    c.drawRightString(width - 20*mm, height - 15*mm, "В/Ч А7020")
+    c.drawRightString(width - 20 * mm, height - 15 * mm, "В/Ч А7020")
 
     c.setFont(_FONT_NAME, 14)
     title = DOC_TITLES.get(doc_type, doc_type.upper())
-    c.drawCentredString(width / 2, height - 35*mm, title)
+    c.drawCentredString(width / 2, height - 35 * mm, title)
 
     # ── Горизонтальна лінія ───────────────────────────────────────────────────
     c.setLineWidth(0.5)
-    c.line(20*mm, height - 40*mm, width - 20*mm, height - 40*mm)
+    c.line(20 * mm, height - 40 * mm, width - 20 * mm, height - 40 * mm)
 
     # ── Поля документа ────────────────────────────────────────────────────────
     c.setFont(_FONT_NAME, 11)
     fields = [
-        ("П.І.Б.",            record.get("pib", "—")),
-        ("Військове звання",  record.get("rank", "—")),
-        ("Дата народження",   record.get("birth_date", "—")),
-        ("Номер телефону",    record.get("phone", "—")),
-        ("Розміщення о/с",    record.get("location", "—")),
-        ("Дата зарахування",  record.get("enroll_date", "—")),
-        ("Діагноз",           diagnosis),
+        ("П.І.Б.", record.get("pib", "—")),
+        ("Військове звання", record.get("rank", "—")),
+        ("Дата народження", record.get("birth_date", "—")),
+        ("Номер телефону", record.get("phone", "—")),
+        ("Розміщення о/с", record.get("location", "—")),
+        ("Дата зарахування", record.get("enroll_date", "—")),
+        ("Діагноз", diagnosis),
     ]
 
-    y = height - 55*mm
-    line_h = 10*mm
+    y = height - 55 * mm
+    line_h = 10 * mm
 
     for label, value in fields:
         c.setFont(_FONT_NAME, 9)
         c.setFillColorRGB(0.4, 0.4, 0.4)
-        c.drawString(20*mm, y + 3*mm, label + ":")
+        c.drawString(20 * mm, y + 3 * mm, label + ":")
 
         c.setFont(_FONT_NAME, 11)
         c.setFillColorRGB(0, 0, 0)
 
         # Довгий текст — перенос
-        max_width = width - 80*mm
+        max_width = width - 80 * mm
         words = value.split()
         line, lines = "", []
         for word in words:
@@ -130,24 +132,26 @@ def generate_pdf(record: dict, diagnosis: str, doc_type: str, file_path: Path):
         if line:
             lines.append(line)
 
-        c.drawString(55*mm, y, lines[0] if lines else "—")
+        c.drawString(55 * mm, y, lines[0] if lines else "—")
         for extra_line in lines[1:]:
-            y -= 6*mm
-            c.drawString(55*mm, y, extra_line)
+            y -= 6 * mm
+            c.drawString(55 * mm, y, extra_line)
 
         # Лінія під полем
         c.setLineWidth(0.3)
         c.setStrokeColorRGB(0.8, 0.8, 0.8)
-        c.line(20*mm, y - 2*mm, width - 20*mm, y - 2*mm)
+        c.line(20 * mm, y - 2 * mm, width - 20 * mm, y - 2 * mm)
         c.setStrokeColorRGB(0, 0, 0)
 
         y -= line_h
 
     # ── Підписи ───────────────────────────────────────────────────────────────
-    y_sign = 55*mm
+    y_sign = 55 * mm
     c.setFont(_FONT_NAME, 11)
-    c.drawString(20*mm, y_sign, "Лікар: ___________________________")
-    c.drawString(20*mm, y_sign - 10*mm, "Дата: " + datetime.now().strftime("%d.%m.%Y"))
-    c.drawRightString(width - 20*mm, y_sign, "М.П.")
+    c.drawString(20 * mm, y_sign, "Лікар: ___________________________")
+    c.drawString(
+        20 * mm, y_sign - 10 * mm, "Дата: " + datetime.now().strftime("%d.%m.%Y")
+    )
+    c.drawRightString(width - 20 * mm, y_sign, "М.П.")
 
     c.save()

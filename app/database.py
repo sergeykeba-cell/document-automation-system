@@ -1,6 +1,7 @@
 """
 database.py — ініціалізація SQLite з WAL-режимом
 """
+
 import sqlite3
 from pathlib import Path
 

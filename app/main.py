@@ -2,30 +2,28 @@
 main.py — FastAPI додаток В/Ч А7020
 Python 3.11+
 """
-import io
-import os
-from contextlib import asynccontextmanager
-from pathlib import Path
-from datetime import date
-from typing import Optional
 
-from fastapi import (
-    FastAPI, Depends, HTTPException, UploadFile, File, Query
-)
+import io
+from contextlib import asynccontextmanager
+from datetime import date
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
-from app.database import init_db, get_conn
-from app.security import get_current_user, require_admin, create_user
+from app.database import get_conn, init_db
+from app.export_service import export_registry
 from app.import_service import import_xls
 from app.pdf_gen import generate_pdf, get_versioned_path
-from app.export_service import export_registry
+from app.security import create_user, get_current_user, require_admin
 
 # ── Папка для PDF-файлів ──────────────────────────────────────────────────────
 PDF_DIR = Path("pdfs")
 PDF_DIR.mkdir(exist_ok=True)
+
 
 # ── Lifespan (замість deprecated @app.on_event) ───────────────────────────────
 @asynccontextmanager
@@ -38,6 +36,7 @@ async def lifespan(app: FastAPI):
             print("[AUTH] Default users: admin/admin123, operator/op123")
             print("[AUTH] Change passwords after first login!")
     yield
+
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 app = FastAPI(title="В/Ч А7020 · СЗЧ", version="1.0.0", lifespan=lifespan)
@@ -53,7 +52,6 @@ app.add_middleware(
 # ── Статичні файли — монтуються в кінці файлу, після всіх /api/ маршрутів ────
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
-
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -166,17 +164,20 @@ def create_document(
     # Запис в БД — атомарно
     try:
         with get_conn() as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 INSERT INTO documents
                     (personnel_id, doc_type, diagnosis, file_path, created_by)
                 VALUES (?,?,?,?,?)
-            """, (
-                req.personnel_id,
-                req.doc_type,
-                req.diagnosis,
-                str(file_path),
-                user["username"],
-            ))
+            """,
+                (
+                    req.personnel_id,
+                    req.doc_type,
+                    req.diagnosis,
+                    str(file_path),
+                    user["username"],
+                ),
+            )
             doc_id = cursor.lastrowid
 
             conn.execute(
@@ -193,8 +194,8 @@ def create_document(
         raise HTTPException(500, f"Помилка запису в БД: {e}")
 
     return {
-        "id":         doc_id,
-        "file_path":  str(file_path),
+        "id": doc_id,
+        "file_path": str(file_path),
         "created_at": date.today().isoformat(),
         "created_by": user["username"],
     }
@@ -214,7 +215,8 @@ def get_registry(
         raise HTTPException(400, f"Невідомий тип: {doc_type}")
 
     with get_conn() as conn:
-        rows = conn.execute("""
+        rows = conn.execute(
+            """
             SELECT
                 d.id,
                 p.pib,
@@ -232,7 +234,9 @@ def get_registry(
             WHERE d.doc_type = ?
             ORDER BY d.id DESC
             LIMIT ?
-        """, (doc_type, limit)).fetchall()
+        """,
+            (doc_type, limit),
+        ).fetchall()
 
     return [dict(r) for r in rows]
 
@@ -292,7 +296,7 @@ async def import_file(
 # ══════════════════════════════════════════════════════════════════════════════
 @app.get("/api/export")
 def export(
-    doc_type: Optional[str] = Query(None),
+    doc_type: str | None = Query(None),
     user=Depends(require_admin),
 ):
     allowed = {"аналізи", "влк", "стаціонар", "характеристика", "рапорт"}
@@ -337,7 +341,8 @@ async def import_preview(
     user=Depends(require_admin),
 ):
     import pandas as pd
-    from app.import_service import COL_MAP, _find_col
+
+    from app.import_service import _find_col
 
     content = await file.read()
     try:
@@ -345,8 +350,16 @@ async def import_preview(
     except Exception as e:
         raise HTTPException(400, f"Помилка читання: {e}")
 
-    fields = ["pib", "phone", "rank", "birth_date", "location",
-              "subdivision", "arrival_date", "enroll_date"]
+    fields = [
+        "pib",
+        "phone",
+        "rank",
+        "birth_date",
+        "location",
+        "subdivision",
+        "arrival_date",
+        "enroll_date",
+    ]
     mapping = {f: _find_col(list(df.columns), f) for f in fields}
 
     # Перший рядок як приклад
@@ -358,10 +371,10 @@ async def import_preview(
 
     return {
         "total_columns": len(df.columns),
-        "all_columns":   list(df.columns),
-        "mapping":       mapping,
-        "sample_row":    sample,
-        "total_rows":    len(df),
+        "all_columns": list(df.columns),
+        "mapping": mapping,
+        "sample_row": sample,
+        "total_rows": len(df),
     }
 
 

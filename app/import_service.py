@@ -1,9 +1,11 @@
 """
 import_service.py — імпорт .xls / .xlsx аркуша СЗЧ
 """
+
 import hashlib
-import io
+
 import pandas as pd
+
 from app.database import get_conn
 
 SHEET_NAME = "СЗЧ"
@@ -12,57 +14,50 @@ SHEET_NAME = "СЗЧ"
 # Ключі у нижньому регістрі без зайвих пробілів — для нечіткого пошуку
 COL_MAP = {
     # П.І.Б.
-    "п.і.б.":                           "pib",
-    "піб":                              "pib",
-    "прізвище":                         "pib",
-    "прізвище ім'я по батькові":        "pib",
-    "пib":                              "pib",
-
+    "п.і.б.": "pib",
+    "піб": "pib",
+    "прізвище": "pib",
+    "прізвище ім'я по батькові": "pib",
+    "пib": "pib",
     # Телефон
-    "номер телефону":                   "phone",
-    "телефон":                          "phone",
-    "номер тел":                        "phone",
-    "тел":                              "phone",
-
+    "номер телефону": "phone",
+    "телефон": "phone",
+    "номер тел": "phone",
+    "тел": "phone",
     # Звання
-    "військове звання":                 "rank",
-    "військове зва":                    "rank",
-    "звання":                           "rank",
-
+    "військове звання": "rank",
+    "військове зва": "rank",
+    "звання": "rank",
     # Дата народження
-    "дата народження":                  "birth_date",
-    "дата народжен":                    "birth_date",
-    "дата нар":                         "birth_date",
-    "народження":                       "birth_date",
-
+    "дата народження": "birth_date",
+    "дата народжен": "birth_date",
+    "дата нар": "birth_date",
+    "народження": "birth_date",
     # Розміщення — варіанти написання
-    "розміщення о/с":                   "location",
-    "розміщена о/с":                    "location",   # з фото
-    "розміщено о/с":                    "location",
-    "розміщення":                       "location",
-    "розміщена":                        "location",
-    "розміщеня о/с":                    "location",
-    "розміщеня":                        "location",
-    "розміщеня о/с":                    "location",
-    "розміщення о/с":                   "location",
-
+    "розміщення о/с": "location",
+    "розміщена о/с": "location",  # з фото
+    "розміщено о/с": "location",
+    "розміщення": "location",
+    "розміщена": "location",
+    "розміщеня о/с": "location",
+    "розміщеня": "location",
+    "розміщеня о/с": "location",
+    "розміщення о/с": "location",
     # Підрозділ
-    "підрозділ":                        "subdivision",
-    "підрозд":                          "subdivision",
-    "рота":                             "subdivision",
-
+    "підрозділ": "subdivision",
+    "підрозд": "subdivision",
+    "рота": "subdivision",
     # Прибув
-    "прибув у в/ч":                     "arrival_date",
-    "прибув у вч":                      "arrival_date",
-    "прибув":                           "arrival_date",
-    "дата прибуття":                    "arrival_date",
-
+    "прибув у в/ч": "arrival_date",
+    "прибув у вч": "arrival_date",
+    "прибув": "arrival_date",
+    "дата прибуття": "arrival_date",
     # Дата зарахування
-    "дата зарахування у в/ч а7020":     "enroll_date",
-    "дата зарахування у вч а7020":      "enroll_date",
-    "дата зарахування":                 "enroll_date",
-    "зарахування":                      "enroll_date",
-    "дата зарах":                       "enroll_date",
+    "дата зарахування у в/ч а7020": "enroll_date",
+    "дата зарахування у вч а7020": "enroll_date",
+    "дата зарахування": "enroll_date",
+    "зарахування": "enroll_date",
+    "дата зарах": "enroll_date",
 }
 
 
@@ -135,8 +130,16 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
     print(f"[IMPORT] Знайдено {len(df.columns)} колонок: {list(df.columns[:10])}...")
 
     # ── Маппінг колонок ───────────────────────────────────────────────────────
-    fields = ["pib", "phone", "rank", "birth_date", "location",
-              "subdivision", "arrival_date", "enroll_date"]
+    fields = [
+        "pib",
+        "phone",
+        "rank",
+        "birth_date",
+        "location",
+        "subdivision",
+        "arrival_date",
+        "enroll_date",
+    ]
     col_mapping = {f: _find_col(list(df.columns), f) for f in fields}
 
     print(f"[IMPORT] Маппінг: { {k: v for k, v in col_mapping.items()} }")
@@ -158,13 +161,15 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
                 if not pib:
                     continue
 
-                phone      = _normalize_phone(_get_val(row, col_mapping["phone"]))
-                rank       = _get_val(row, col_mapping["rank"])
+                phone = _normalize_phone(_get_val(row, col_mapping["phone"]))
+                rank = _get_val(row, col_mapping["rank"])
                 birth_date = _normalize_date(_get_val(row, col_mapping["birth_date"]))
-                location   = _get_val(row, col_mapping["location"])
-                subdivision= _get_val(row, col_mapping["subdivision"])
-                arrival_date = _normalize_date(_get_val(row, col_mapping["arrival_date"]))
-                enroll_date  = _normalize_date(_get_val(row, col_mapping["enroll_date"]))
+                location = _get_val(row, col_mapping["location"])
+                subdivision = _get_val(row, col_mapping["subdivision"])
+                arrival_date = _normalize_date(
+                    _get_val(row, col_mapping["arrival_date"])
+                )
+                enroll_date = _normalize_date(_get_val(row, col_mapping["enroll_date"]))
 
                 src_hash = _row_hash(pib, birth_date, phone)
 
@@ -173,22 +178,46 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
                 ).fetchone()
 
                 if existing:
-                    conn.execute("""
+                    conn.execute(
+                        """
                         UPDATE personnel SET
                             pib=?, phone=?, rank=?, birth_date=?,
                             location=?, subdivision=?, arrival_date=?, enroll_date=?
                         WHERE source_hash=?
-                    """, (pib, phone, rank, birth_date,
-                          location, subdivision, arrival_date, enroll_date, src_hash))
+                    """,
+                        (
+                            pib,
+                            phone,
+                            rank,
+                            birth_date,
+                            location,
+                            subdivision,
+                            arrival_date,
+                            enroll_date,
+                            src_hash,
+                        ),
+                    )
                     updated += 1
                 else:
-                    conn.execute("""
+                    conn.execute(
+                        """
                         INSERT INTO personnel
                             (pib, phone, rank, birth_date, location,
                              subdivision, arrival_date, enroll_date, source_hash)
                         VALUES (?,?,?,?,?,?,?,?,?)
-                    """, (pib, phone, rank, birth_date,
-                          location, subdivision, arrival_date, enroll_date, src_hash))
+                    """,
+                        (
+                            pib,
+                            phone,
+                            rank,
+                            birth_date,
+                            location,
+                            subdivision,
+                            arrival_date,
+                            enroll_date,
+                            src_hash,
+                        ),
+                    )
                     inserted += 1
 
             except Exception as e:
@@ -197,7 +226,11 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
 
         conn.execute(
             "INSERT INTO audit_log (action, detail, username) VALUES (?,?,?)",
-            ("import", f"{filename}: +{inserted} нових, ~{updated} оновлено, {errors} помилок", username),
+            (
+                "import",
+                f"{filename}: +{inserted} нових, ~{updated} оновлено, {errors} помилок",
+                username,
+            ),
         )
 
     print(f"[IMPORT] Готово: +{inserted} нових, ~{updated} оновлено, {errors} помилок")

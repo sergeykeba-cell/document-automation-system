@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = [
+    "B008",   # FastAPI's Depends()/File() in argument defaults is idiomatic, not a bug
+    "BLE001", # Broad `except Exception` is used intentionally here to convert
+              # internal errors into clean HTTP error responses (400/500) at API boundaries.
+    "DTZ005", # datetime.now() / date.today() without tz — app runs in a single
+    "DTZ011", # timezone context; revisit if multi-timezone support is ever needed.
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]

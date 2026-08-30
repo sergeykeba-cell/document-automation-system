@@ -1,23 +1,34 @@
 """
 export_service.py — експорт реєстру в .xlsx
 """
+
 import io
+
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Alignment, Font, PatternFill
+
 from app.database import get_conn
 
 SHEET_MAP = {
-    "аналізи":        "Аналізи",
-    "влк":            "ВЛК",
-    "стаціонар":      "Стаціонар",
+    "аналізи": "Аналізи",
+    "влк": "ВЛК",
+    "стаціонар": "Стаціонар",
     "характеристика": "Характеристика",
-    "рапорт":         "Рапорт",
+    "рапорт": "Рапорт",
 }
 
 HEADERS = [
-    "№", "П.І.Б.", "Телефон", "Звання", "Дата народження",
-    "Дата зарахування", "Розміщення о/с", "Діагноз",
-    "Дата створення", "Шлях до файлу", "Створив",
+    "№",
+    "П.І.Б.",
+    "Телефон",
+    "Звання",
+    "Дата народження",
+    "Дата зарахування",
+    "Розміщення о/с",
+    "Діагноз",
+    "Дата створення",
+    "Шлях до файлу",
+    "Створив",
 ]
 
 
@@ -47,7 +58,8 @@ def export_registry(doc_type: str | None = None) -> bytes:
             ws.append(HEADERS)
             _style_header(ws)
 
-            rows = conn.execute("""
+            rows = conn.execute(
+                """
                 SELECT
                     ROW_NUMBER() OVER (ORDER BY d.id) AS num,
                     p.pib, p.phone, p.rank, p.birth_date,
@@ -57,7 +69,9 @@ def export_registry(doc_type: str | None = None) -> bytes:
                 JOIN personnel p ON p.id = d.personnel_id
                 WHERE d.doc_type = ?
                 ORDER BY d.id DESC
-            """, (t,)).fetchall()
+            """,
+                (t,),
+            ).fetchall()
 
             for row in rows:
                 ws.append(list(row))
@@ -65,9 +79,7 @@ def export_registry(doc_type: str | None = None) -> bytes:
             # Ширина колонок
             col_widths = [5, 35, 18, 20, 15, 15, 20, 40, 12, 50, 15]
             for i, w in enumerate(col_widths, 1):
-                ws.column_dimensions[
-                    openpyxl.utils.get_column_letter(i)
-                ].width = w
+                ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
 
     buf = io.BytesIO()
     wb.save(buf)
