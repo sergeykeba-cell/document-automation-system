@@ -1,0 +1,30 @@
+# Secrets
+.env
+
+# Database (may contain real personal data — never commit)
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Uploaded/imported files (may contain real personal data)
+uploads/
+*.xlsx
+*.xls
+!docs/**/*.xlsx
+
+# Generated documents
+generated_pdfs/
+*.pdf
+!docs/**/*.pdf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
