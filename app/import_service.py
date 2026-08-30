@@ -1,5 +1,5 @@
 """
-import_service.py — імпорт .xls / .xlsx аркуша СЗЧ
+import_service.py — імпорт .xls / .xlsx 
 """
 
 import hashlib
@@ -8,7 +8,7 @@ import pandas as pd
 
 from app.database import get_conn
 
-SHEET_NAME = "СЗЧ"
+SHEET_NAME = "ЗЧ"
 
 # Очікувані назви колонок → внутрішня назва поля
 # Ключі у нижньому регістрі без зайвих пробілів — для нечіткого пошуку
@@ -24,10 +24,7 @@ COL_MAP = {
     "телефон": "phone",
     "номер тел": "phone",
     "тел": "phone",
-    # Звання
-    "військове звання": "rank",
-    "військове зва": "rank",
-    "звання": "rank",
+  
     # Дата народження
     "дата народження": "birth_date",
     "дата народжен": "birth_date",
@@ -35,30 +32,14 @@ COL_MAP = {
     "народження": "birth_date",
     # Розміщення — варіанти написання
     "розміщення о/с": "location",
-    "розміщена о/с": "location",  # з фото
-    "розміщено о/с": "location",
-    "розміщення": "location",
-    "розміщена": "location",
-    "розміщеня о/с": "location",
-    "розміщеня": "location",
-    "розміщеня о/с": "location",
-    "розміщення о/с": "location",
     # Підрозділ
     "підрозділ": "subdivision",
     "підрозд": "subdivision",
-    "рота": "subdivision",
-    # Прибув
-    "прибув у в/ч": "arrival_date",
-    "прибув у вч": "arrival_date",
-    "прибув": "arrival_date",
+
     "дата прибуття": "arrival_date",
     # Дата зарахування
-    "дата зарахування у в/ч а7020": "enroll_date",
-    "дата зарахування у вч а7020": "enroll_date",
     "дата зарахування": "enroll_date",
-    "зарахування": "enroll_date",
-    "дата зарах": "enroll_date",
-}
+ }
 
 
 def _find_col(df_cols: list, field: str) -> str | None:
