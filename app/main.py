@@ -145,9 +145,7 @@ def create_document(
 ):
     # Отримати дані особи
     with get_conn() as conn:
-        person = conn.execute(
-            "SELECT * FROM personnel WHERE id=?", (req.personnel_id,)
-        ).fetchone()
+        person = conn.execute("SELECT * FROM personnel WHERE id=?", (req.personnel_id,)).fetchone()
 
     if not person:
         raise HTTPException(404, "Особу не знайдено")
@@ -325,9 +323,7 @@ def export(
 @app.get("/api/audit")
 def get_audit(limit: int = Query(100, le=500), user=Depends(require_admin)):
     with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
     return [dict(r) for r in rows]
 
 

@@ -149,9 +149,7 @@ def generate_pdf(record: dict, diagnosis: str, doc_type: str, file_path: Path):
     y_sign = 55 * mm
     c.setFont(_FONT_NAME, 11)
     c.drawString(20 * mm, y_sign, "Лікар: ___________________________")
-    c.drawString(
-        20 * mm, y_sign - 10 * mm, "Дата: " + datetime.now().strftime("%d.%m.%Y")
-    )
+    c.drawString(20 * mm, y_sign - 10 * mm, "Дата: " + datetime.now().strftime("%d.%m.%Y"))
     c.drawRightString(width - 20 * mm, y_sign, "М.П.")
 
     c.save()

@@ -1,5 +1,5 @@
 """
-import_service.py — імпорт .xls / .xlsx 
+import_service.py — імпорт .xls / .xlsx
 """
 
 import hashlib
@@ -24,7 +24,6 @@ COL_MAP = {
     "телефон": "phone",
     "номер тел": "phone",
     "тел": "phone",
-  
     # Дата народження
     "дата народження": "birth_date",
     "дата народжен": "birth_date",
@@ -35,11 +34,10 @@ COL_MAP = {
     # Підрозділ
     "підрозділ": "subdivision",
     "підрозд": "subdivision",
-
     "дата прибуття": "arrival_date",
     # Дата зарахування
     "дата зарахування": "enroll_date",
- }
+}
 
 
 def _find_col(df_cols: list, field: str) -> str | None:
@@ -127,9 +125,7 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
 
     # Перевірка обов'язкових
     if col_mapping["pib"] is None:
-        raise ValueError(
-            f"Колонка П.І.Б. не знайдена. Доступні: {list(df.columns[:15])}"
-        )
+        raise ValueError(f"Колонка П.І.Б. не знайдена. Доступні: {list(df.columns[:15])}")
 
     # ── Нормалізація і UPSERT ─────────────────────────────────────────────────
     inserted = updated = errors = 0
@@ -147,9 +143,7 @@ def import_xls(file_bytes, filename: str, username: str) -> dict:
                 birth_date = _normalize_date(_get_val(row, col_mapping["birth_date"]))
                 location = _get_val(row, col_mapping["location"])
                 subdivision = _get_val(row, col_mapping["subdivision"])
-                arrival_date = _normalize_date(
-                    _get_val(row, col_mapping["arrival_date"])
-                )
+                arrival_date = _normalize_date(_get_val(row, col_mapping["arrival_date"]))
                 enroll_date = _normalize_date(_get_val(row, col_mapping["enroll_date"]))
 
                 src_hash = _row_hash(pib, birth_date, phone)
